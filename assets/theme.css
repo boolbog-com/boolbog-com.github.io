@@ -1,0 +1,57 @@
+/* Shared Material 3 pastel theme. Primary is seeded from the WoW mage class color (#3FC7EB). */
+:root {
+  color-scheme: light;
+  --primary: #3fc7eb;          /* mage blue: fills, selected states */
+  --on-primary: #00313e;
+  --primary-ink: #00667e;      /* readable primary for text, icons, focus rings */
+  --primary-container: #c9f0ff;
+  --on-primary-container: #003a4a;
+  --secondary-container: #d6e9f2;
+  --on-secondary-container: #0f2730;
+  --twitch-container: #ebe2ff;
+  --on-twitch-container: #4a2f8f;
+  --youtube-container: #ffdcd6;
+  --on-youtube-container: #86211a;
+
+  --surface: #f4fafd;
+  --surface-lowest: #ffffff;
+  --surface-low: #edf5f8;
+  --surface-container: #e6eff3;
+  --surface-high: #dfe9ed;
+  --on-surface: #151d20;
+  --on-surface-variant: #3f4b50;
+  --outline: #6f7a7f;
+  --outline-variant: #c3cdd1;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 28px;
+
+  --font: "Roboto Flex", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--on-surface);
+  font: 400 15px/1.5 var(--font);
+  font-optical-sizing: auto;
+}
+
+a { color: var(--primary-ink); }
+
+:focus-visible {
+  outline: 2px solid var(--primary-ink);
+  outline-offset: 2px;
+}
+
+.icon { width: 20px; height: 20px; flex: none; fill: currentColor; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

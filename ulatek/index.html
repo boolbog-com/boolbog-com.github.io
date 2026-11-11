@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ulatek VOD Index</title>
+<meta name="description" content="Encounter VODs you can filter by boss side, wave side and strategy.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%233fc7eb'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap">
+<link rel="stylesheet" href="../assets/theme.css">
+<style>
+  /* Top app bar */
+  header {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--surface);
+    transition: background-color .2s, box-shadow .2s;
+  }
+  header.scrolled { background: var(--surface-container); box-shadow: 0 1px 0 var(--outline-variant); }
+  .bar { max-width: 1500px; margin: 0 auto; padding: 12px 20px 16px; }
+  .title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .back {
+    width: 40px; height: 40px; flex: none;
+    display: grid; place-items: center;
+    margin-left: -8px;
+    border-radius: 50%;
+    color: var(--on-surface-variant);
+    transition: background-color .15s;
+  }
+  .back:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
+  .back .icon { width: 24px; height: 24px; }
+  h1 {
+    margin: 0;
+    font-size: 26px; line-height: 1.15; font-weight: 760;
+    font-variation-settings: "wdth" 140;
+    letter-spacing: -.01em;
+  }
+  .count { margin-left: auto; color: var(--on-surface-variant); font-size: 14px; white-space: nowrap; }
+
+  /* Filters: Boss + Waves on one row, Strategy beneath */
+  .filters { display: grid; gap: 12px; }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+  .group { display: flex; align-items: center; gap: 12px; }
+  .group > .label { color: var(--on-surface-variant); font-size: 14px; font-weight: 500; min-width: 56px; }
+
+  /* M3 segmented buttons */
+  .seg { display: inline-flex; border: 1px solid var(--outline); border-radius: 999px; overflow: hidden; }
+  .seg button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 40px; padding: 0 16px;
+    background: transparent; color: var(--on-surface);
+    border: 0; font: inherit; font-size: 14px; font-weight: 500; letter-spacing: .01em;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .15s;
+  }
+  .seg button + button { border-left: 1px solid var(--outline); }
+  .seg button:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); }
+  .seg button:focus-visible { outline-offset: -3px; }
+  .seg button .check { display: none; width: 18px; height: 18px; }
+  .seg button[aria-pressed="true"] { background: var(--primary-container); color: var(--on-primary-container); }
+  .seg button[aria-pressed="true"]:hover { background: color-mix(in srgb, var(--on-primary-container) 8%, var(--primary-container)); }
+  .seg button[aria-pressed="true"] .check { display: block; }
+
+  /* Results */
+  main { padding: 8px 20px 48px; max-width: 1500px; margin: 0 auto; }
+  section + section { margin-top: 12px; }
+  h2 {
+    display: flex; align-items: center; gap: 10px;
+    margin: 24px 0 12px;
+    font-size: 18px; font-weight: 650;
+    font-variation-settings: "wdth" 120;
+  }
+  .badge {
+    min-width: 24px; height: 24px; padding: 0 8px;
+    display: inline-grid; place-items: center;
+    border-radius: 999px;
+    background: var(--secondary-container); color: var(--on-secondary-container);
+    font-size: 13px; font-weight: 600;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 16px; }
+
+  .card {
+    --class: var(--surface-high);
+    background: var(--surface-low);
+    border-radius: var(--radius-l);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .player { aspect-ratio: 16 / 9; background: #000; position: relative; }
+  .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .facade {
+    position: absolute; inset: 0; width: 100%;
+    border: 0; padding: 0;
+    background: color-mix(in srgb, var(--class) 34%, var(--surface-container));
+    color: var(--on-surface); font: inherit;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  }
+  .facade:focus-visible { outline-offset: -4px; }
+  .fab {
+    width: 56px; height: 56px;
+    display: grid; place-items: center;
+    border-radius: var(--radius-l);
+    background: var(--primary-container); color: var(--on-primary-container);
+    box-shadow: 0 1px 3px rgba(0, 40, 50, .18), 0 4px 8px rgba(0, 40, 50, .1);
+    transition: border-radius .2s, box-shadow .2s;
+  }
+  .fab .icon { width: 28px; height: 28px; }
+  .facade:hover .fab { border-radius: var(--radius-xl); box-shadow: 0 2px 4px rgba(0, 40, 50, .2), 0 8px 14px rgba(0, 40, 50, .12); }
+  .facade .when { font-size: 14px; font-weight: 500; color: var(--on-surface); }
+  .msg {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; text-align: center;
+    background: var(--surface-container); color: var(--on-surface-variant); font-size: 14px;
+  }
+
+  .meta { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .spec-row { display: flex; align-items: center; gap: 8px; }
+  .dot {
+    width: 12px; height: 12px; flex: none; border-radius: 50%;
+    background: var(--class);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-surface) 25%, transparent);
+  }
+  .card.no-class .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--outline); }
+  .spec { font-size: 17px; font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    height: 28px; padding: 0 10px;
+    display: inline-flex; align-items: center;
+    border-radius: var(--radius-s);
+    border: 1px solid var(--outline-variant);
+    color: var(--on-surface-variant);
+    font-size: 13px; font-weight: 500;
+  }
+  .chip.tw { border-color: transparent; background: var(--twitch-container); color: var(--on-twitch-container); }
+  .chip.yt { border-color: transparent; background: var(--youtube-container); color: var(--on-youtube-container); }
+  .open {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 36px; padding: 0 12px; margin-right: -8px;
+    border-radius: 999px;
+    color: var(--primary-ink); text-decoration: none;
+    font-size: 14px; font-weight: 600;
+    transition: background-color .15s;
+  }
+  .open .icon { width: 18px; height: 18px; }
+  .open:hover { background: color-mix(in srgb, var(--primary-ink) 10%, transparent); }
+  .note { font-size: 14px; color: var(--on-surface-variant); max-width: 68ch; }
+  .empty { color: var(--on-surface-variant); padding: 64px 0; text-align: center; font-size: 15px; }
+
+  @media (max-width: 560px) {
+    .bar { padding: 8px 16px 14px; }
+    main { padding: 4px 16px 40px; }
+    h1 { font-size: 22px; }
+    .filters, .filter-row { gap: 8px; }
+    .filter-row { flex-direction: column; }
+    .group { gap: 8px; }
+    .group > .label { min-width: 60px; font-size: 13px; }
+    .seg { display: flex; flex: 1; }
+    .seg button { flex: 1 1 auto; height: 36px; padding: 0 8px; font-size: 13px; }
+    .seg button .check { width: 16px; height: 16px; }
+    .seg[data-key="s"] button[aria-pressed="true"] .check { display: none; }
+  }
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="bar">
+    <div class="title-row">
+      <a class="back" href="../" aria-label="Back to all pages">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>
+      </a>
+      <h1>Ulatek VOD Index</h1>
+      <div class="count" id="count" aria-live="polite"></div>
+    </div>
+    <div class="filters">
+      <div class="filter-row">
+        <div class="group"><span class="label" id="lbl-b">Boss</span><div class="seg" role="group" aria-labelledby="lbl-b" data-key="b"></div></div>
+        <div class="group"><span class="label" id="lbl-w">Waves</span><div class="seg" role="group" aria-labelledby="lbl-w" data-key="w"></div></div>
+      </div>
+      <div class="filter-row">
+        <div class="group"><span class="label" id="lbl-s">Strategy</span><div class="seg" role="group" aria-labelledby="lbl-s" data-key="s"></div></div>
+      </div>
+    </div>
+  </div>
+</header>
+<main id="results"></main>
+
+<script>
+const STRATEGIES = { blink: "Mage Blink", noegg: "No Egg", egg: "With Egg" };
+const SIDES = { L: "Left", R: "Right" };
+const POSITION_ORDER = { Left: 0, Mid: 1, Right: 2 };
+
+// WoW class colors; role-only labels (Melee, Healer, Ranged, Unlabeled) get a neutral tile.
+const CLASS_COLORS = {
+  "Mage": "#3FC7EB",
+  "Hunter": "#AAD372",
+  "Aug Evoker": "#33937F",
+  "Priest": "#FFFFFF",
+  "MW Monk": "#00FF98",
+  "Ele Shaman": "#0070DD",
+};
+
+const clip = (strat, boss, waves, pos, spec, src, id, t, note = "") =>
+  ({ strat, boss, waves, pos, spec, src, id, sec: toSeconds(t), note });
+
+const CLIPS = [
+  // Boss Left, Waves Left
+  clip("blink", "L", "L", "Left",  "Mage",   "tw", "2905210160", "13m10s"),
+  clip("noegg", "L", "L", "Mid",   "Hunter", "tw", "2894003271", "2m07s"),
+  clip("egg",   "L", "L", "Mid",   "Hunter", "tw", "2906340595", "3h40m32s"),
+  clip("blink", "L", "L", "Right", "Mage",   "tw", "2911168379", "3h18m37s"),
+
+  // Boss Left, Waves Right
+  clip("blink", "L", "R", "Left",  "Mage",       "yt", "oMSz8Pq01GA", 122),
+  clip("egg",   "L", "R", "Left",  "Aug Evoker", "tw", "2905069459", "6h45m36s"),
+  clip("noegg", "L", "R", "Mid",   "Melee",      "yt", "syTDXWrELbg", 108),
+  clip("noegg", "L", "R", "Mid",   "Healer",     "tw", "2906551889", "2m11s"),
+  clip("egg",   "L", "R", "Mid",   "Priest",     "yt", "eyy6m0w4AQA", 135),
+  clip("blink", "L", "R", "Right", "Mage",       "tw", "2910264672", "1h37m35s"),
+  clip("blink", "L", "R", "Right", "Mage",       "tw", "2910264672", "1h32m59s"),
+  clip("blink", "L", "R", "Right", "Mage",       "tw", "2910264672", "1h26m34s"),
+  clip("blink", "L", "R", "Right", "Mage",       "tw", "2911168379", "3h06m54s"),
+
+  // Boss Right, Waves Left
+  clip("blink", "R", "L", "Left",  "Mage",        "tw", "2905210160", "24m02s"),
+  clip("noegg", "R", "L", "Mid",   "MW Monk",     "tw", "2910263999", "1h46m00s"),
+  clip("egg",   "R", "L", "Mid",   "Ele Shaman",  "tw", "2910264300", "1h45m14s"),
+  clip("noegg", "R", "L", "Mid",   "Priest",      "tw", "2910258382", "2h01m12s"),
+  clip("blink", "R", "L", "Right", "Unlabeled",   "yt", "DX3LHAatbUM", 108, "Unlabeled in the source list; grouped with Mage Blink by position."),
+  clip("blink", "R", "L", "Right", "Mage",        "tw", "2910264672", "1h44m02s"),
+  clip("blink", "R", "L", "Right", "Mage",        "tw", "2911168379", "2h41m11s"),
+
+  // Boss Right, Waves Right
+  clip("egg",   "R", "R", "Left",  "Aug Evoker", "yt", "hsOk8ZFJCSo", 108),
+  clip("egg",   "R", "R", "Mid",   "Melee",      "yt", "U0CWOeEcCQg", 123),
+  clip("noegg", "R", "R", "Mid",   "Ranged",     "yt", "6G_OhBHeg0g", 111),
+  clip("noegg", "R", "R", "Mid",   "Priest",     "tw", "2910258382", "1h49m58s"),
+  clip("egg",   "R", "R", "Mid",   "Aug Evoker", "tw", "2905069459", "6h20m08s"),
+  clip("blink", "R", "R", "Right", "Mage",       "tw", "2911168379", "3h28m27s", "Really good example of how to use the NSRT note for specific combos."),
+  clip("blink", "R", "R", "Right", "Mage",       "tw", "2911168379", "2h51m48s"),
+];
+
+const FILTER_OPTIONS = {
+  s: [["all", "All"], ...Object.entries(STRATEGIES)],
+  b: [["all", "All"], ...Object.entries(SIDES)],
+  w: [["all", "All"], ...Object.entries(SIDES)],
+};
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const ICONS = {
+  check: "M9.55 18 3.85 12.3l1.43-1.42 4.27 4.27 9.17-9.18 1.43 1.43z",
+  play: "M8 5.14v13.72L19 12z",
+  external: "M5 21q-.82 0-1.41-.59Q3 19.82 3 19V5q0-.82.59-1.41Q4.18 3 5 3h7v2H5v14h14v-7h2v7q0 .82-.59 1.41Q19.82 21 19 21zm4.7-5.3-1.4-1.4L17.6 5H14V3h7v7h-2V6.4z",
+};
+
+const state = readState();
+
+function toSeconds(t) {
+  if (typeof t === "number") return t;
+  const [, h = 0, m = 0, s = 0] = t.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+  return +h * 3600 + +m * 60 + +s;
+}
+
+function clock(sec) {
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
+function twitchTime(sec) {
+  return `${Math.floor(sec / 3600)}h${Math.floor(sec % 3600 / 60)}m${sec % 60}s`;
+}
+
+function watchUrl(c) {
+  return c.src === "tw"
+    ? `https://www.twitch.tv/videos/${c.id}?t=${twitchTime(c.sec)}`
+    : `https://youtu.be/${c.id}?t=${c.sec}`;
+}
+
+function embedUrl(c) {
+  return c.src === "tw"
+    ? `https://player.twitch.tv/?video=${c.id}&time=${twitchTime(c.sec)}&parent=${location.hostname}&autoplay=true`
+    : `https://www.youtube-nocookie.com/embed/${c.id}?start=${c.sec}&autoplay=1`;
+}
+
+function readState() {
+  const p = new URLSearchParams(location.search);
+  const pick = (key) => {
+    const v = p.get(key);
+    return FILTER_OPTIONS[key].some(([k]) => k === v) ? v : "all";
+  };
+  return { s: pick("s"), b: pick("b"), w: pick("w") };
+}
+
+function writeState() {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(state)) if (v !== "all") p.set(k, v);
+  const qs = p.toString();
+  try { history.replaceState(null, "", qs ? `?${qs}` : location.pathname); } catch {}
+}
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else node.setAttribute(k, v);
+  }
+  node.append(...children.filter(c => c !== null && c !== undefined));
+  return node;
+}
+
+function icon(name, cls = "") {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("class", `icon ${cls}`.trim());
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+
+function buildFilters() {
+  document.querySelectorAll(".seg").forEach(seg => {
+    const key = seg.dataset.key;
+    for (const [value, label] of FILTER_OPTIONS[key]) {
+      seg.append(el("button", {
+        type: "button",
+        "data-value": value,
+        "aria-pressed": String(state[key] === value),
+        onclick: () => { state[key] = value; writeState(); syncFilters(); render(); },
+      }, icon("check", "check"), label));
+    }
+  });
+}
+
+function syncFilters() {
+  document.querySelectorAll(".seg").forEach(seg => {
+    seg.querySelectorAll("button").forEach(btn =>
+      btn.setAttribute("aria-pressed", String(state[seg.dataset.key] === btn.dataset.value)));
+  });
+}
+
+function loadPlayer(container, c) {
+  if (c.src === "tw" && !location.hostname) {
+    container.replaceChildren(el("div", { class: "msg" },
+      "Twitch embeds only play when this page is served from a web host. Use “Open on Twitch” below."));
+    return;
+  }
+  container.replaceChildren(el("iframe", {
+    src: embedUrl(c),
+    allow: "autoplay; fullscreen; encrypted-media; picture-in-picture",
+    allowfullscreen: "",
+    title: `${STRATEGIES[c.strat]}: ${c.spec}`,
+  }));
+}
+
+function card(c) {
+  const color = CLASS_COLORS[c.spec];
+  const player = el("div", { class: "player" });
+  player.append(el("button", {
+    class: "facade", type: "button", onclick: () => loadPlayer(player, c),
+    "aria-label": `Play ${c.spec} clip at ${clock(c.sec)}`,
+  }, el("span", { class: "fab" }, icon("play")), el("span", { class: "when" }, `Play from ${clock(c.sec)}`)));
+
+  const site = c.src === "tw" ? "Twitch" : "YouTube";
+  return el("article", { class: color ? "card" : "card no-class", style: color ? `--class: ${color}` : "" },
+    player,
+    el("div", { class: "meta" },
+      el("div", { class: "spec-row" },
+        el("span", { class: "dot", "aria-hidden": "true" }),
+        el("span", { class: "spec" }, c.spec)),
+      el("div", { class: "row" },
+        state.s === "all" ? el("span", { class: "chip" }, STRATEGIES[c.strat]) : null,
+        el("span", { class: "chip" }, c.pos),
+        el("span", { class: `chip ${c.src}` }, site),
+        el("a", { class: "open", href: watchUrl(c), target: "_blank", rel: "noopener" },
+          `Open on ${site}`, icon("external"))),
+      c.note ? el("div", { class: "note" }, c.note) : null));
+}
+
+function render() {
+  const stratOrder = Object.keys(STRATEGIES);
+  const visible = CLIPS.filter(c =>
+    (state.s === "all" || c.strat === state.s) &&
+    (state.b === "all" || c.boss === state.b) &&
+    (state.w === "all" || c.waves === state.w));
+
+  const sections = [];
+  for (const boss of ["L", "R"]) {
+    for (const waves of ["L", "R"]) {
+      const items = visible
+        .filter(c => c.boss === boss && c.waves === waves)
+        .sort((a, b) => stratOrder.indexOf(a.strat) - stratOrder.indexOf(b.strat)
+          || POSITION_ORDER[a.pos] - POSITION_ORDER[b.pos]);
+      if (!items.length) continue;
+      sections.push(el("section", {},
+        el("h2", {}, `Boss ${SIDES[boss].toLowerCase()}, waves ${SIDES[waves].toLowerCase()}`,
+          el("span", { class: "badge" }, String(items.length))),
+        el("div", { class: "grid" }, ...items.map(card))));
+    }
+  }
+
+  document.getElementById("count").textContent = visible.length === CLIPS.length
+    ? `${CLIPS.length} clips`
+    : `${visible.length} of ${CLIPS.length} clips`;
+  document.getElementById("results").replaceChildren(
+    ...(sections.length ? sections : [el("div", { class: "empty" }, "No clips match these filters. Set one of them back to All to see more.")]));
+}
+
+const header = document.getElementById("top");
+addEventListener("scroll", () => header.classList.toggle("scrolled", scrollY > 4), { passive: true });
+
+buildFilters();
+render();
+</script>
+</body>
+</html>
