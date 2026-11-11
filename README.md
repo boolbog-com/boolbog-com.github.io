@@ -5,7 +5,7 @@ Static GitHub Pages site. No build step: every file is served as-is (`.nojekyll`
 | Route | File | What it is |
 |-------|------|------------|
 | `/` | `index.html` | Directory of the pages below |
-| `/ulatek/` | `ulatek/index.html` | Encounter VOD index, filterable by boss side, wave side and strategy |
+| `/ulatek/` | `ulatek/index.html` | Encounter VOD index, filterable by boss side, wave side, strategy and assigned pickup side |
 
 Shared theme tokens (Material 3, pastel, mage-blue primary) live in `assets/theme.css`.
 

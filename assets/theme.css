@@ -28,7 +28,40 @@
   --radius-l: 16px;
   --radius-xl: 28px;
 
+  --class-mix: 34%;            /* how strongly a WoW class color tints a card's video facade */
+
   --font: "Roboto Flex", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Material 3 dark scheme from the same seed: primary tone 80, containers tone 30,
+   surfaces from the neutral palette at tones 6 / 4 / 10 / 12 / 17. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --primary: #5fd4fb;
+    --on-primary: #003544;
+    --primary-ink: #7dd8f7;
+    --primary-container: #004d61;
+    --on-primary-container: #bdeaff;
+    --secondary-container: #344a53;
+    --on-secondary-container: #cfe6f1;
+    --twitch-container: #3f3170;
+    --on-twitch-container: #e7deff;
+    --youtube-container: #73302a;
+    --on-youtube-container: #ffdad5;
+
+    --surface: #0f1417;
+    --surface-lowest: #0a0f11;
+    --surface-low: #171c1f;
+    --surface-container: #1b2023;
+    --surface-high: #252b2e;
+    --on-surface: #dee3e6;
+    --on-surface-variant: #bfc8cc;
+    --outline: #899296;
+    --outline-variant: #40484c;
+
+    --class-mix: 26%;
+  }
 }
 
 * { box-sizing: border-box; }
