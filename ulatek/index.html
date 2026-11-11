@@ -79,7 +79,30 @@
     background: var(--secondary-container); color: var(--on-secondary-container);
     font-size: 13px; font-weight: 600;
   }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 16px; }
+  /* auto-fit collapses empty columns, so a filtered section with fewer clips widens its
+     cards to fill the row; --n (clips in the section) caps a sparse row at ~760px a card.
+     dense lets later cards backfill the row a playing card leaves. */
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+    grid-auto-flow: dense;
+    max-width: calc(var(--n, 99) * 760px + (var(--n, 99) - 1) * 16px);
+  }
+  .grid:has(.card.playing) { max-width: none; }
+  /* The playing card takes its own row, as wide as fits the video on screen. */
+  .card.playing {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: min(100%, max(560px, calc((100dvh - 260px) * 16 / 9)));
+  }
+
+  /* Eased layout changes (View Transitions; skipped under reduced motion). */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 340ms;
+    animation-timing-function: cubic-bezier(.2, 0, 0, 1);
+  }
 
   /* Only one layer may paint at each rounded corner: stacked backgrounds clipped by the
      same radius antialias separately and leave a fringe. So the card itself has no
@@ -130,6 +153,21 @@
   }
   .card.no-class .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--outline); }
   .spec { font-size: 17px; font-weight: 600; }
+  /* Restart: a quiet icon that reloads the embed at the clip's timestamp. Hidden (but
+     still taking its space) until a video has been loaded, so nothing shifts. */
+  .restart {
+    margin: -6px -8px -6px auto;
+    width: 36px; height: 36px; flex: none;
+    display: grid; place-items: center;
+    border: 0; border-radius: 50%; padding: 0;
+    background: transparent; color: var(--on-surface-variant);
+    cursor: pointer;
+    visibility: hidden;
+    transition: background-color .15s, color .15s;
+  }
+  .card:has(.player iframe) .restart { visibility: visible; }
+  .restart:hover { background: color-mix(in srgb, var(--on-surface) 8%, transparent); color: var(--on-surface); }
+  .restart .icon { width: 20px; height: 20px; }
   .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .chip {
     height: 28px; padding: 0 10px;
@@ -251,6 +289,7 @@ const CLIPS = [
   clip("blink", "R", "R", "Right", "Mage",       "tw", "2911168379", "3h28m27s", "Really good example of how to use the NSRT note for specific combos."),
   clip("blink", "R", "R", "Right", "Mage",       "tw", "2911168379", "2h51m48s"),
 ];
+CLIPS.forEach((c, i) => { c.key = i; });
 
 const FILTER_OPTIONS = {
   s: [["all", "All"], ...Object.entries(STRATEGIES)],
@@ -263,10 +302,19 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const ICONS = {
   check: "M9.55 18 3.85 12.3l1.43-1.42 4.27 4.27 9.17-9.18 1.43 1.43z",
   play: "M8 5.14v13.72L19 12z",
+  replay: "M12 22q-1.88 0-3.51-.71-1.64-.71-2.85-1.93-1.21-1.21-1.93-2.85Q3 14.88 3 13h2q0 2.93 2.04 4.96Q9.08 20 12 20t4.96-2.04Q19 15.93 19 13t-2.04-4.96Q14.93 6 12 6h-.15l1.55 1.55L12 9 8 5l4-4 1.4 1.45L11.85 4H12q1.88 0 3.51.71 1.64.71 2.85 1.93 1.21 1.21 1.93 2.85Q21 11.13 21 13q0 1.88-.71 3.51-.71 1.64-1.93 2.85-1.21 1.21-2.85 1.93Q13.88 22 12 22z",
   external: "M5 21q-.82 0-1.41-.59Q3 19.82 3 19V5q0-.82.59-1.41Q4.18 3 5 3h7v2H5v14h14v-7h2v7q0 .82-.59 1.41Q19.82 21 19 21zm4.7-5.3-1.4-1.4L17.6 5H14V3h7v7h-2V6.4z",
 };
 
 const state = readState();
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+let activeCard = null;   // the card whose video is loaded and expanded
+
+// Run a DOM update as an eased view transition where supported.
+function withTransition(update, after) {
+  if (!document.startViewTransition || reducedMotion.matches) { update(); after?.(); return; }
+  document.startViewTransition(update).finished.then(() => after?.(), () => after?.());
+}
 
 function toSeconds(t) {
   if (typeof t === "number") return t;
@@ -341,7 +389,11 @@ function buildFilters() {
         type: "button",
         "data-value": value,
         "aria-pressed": String(state[key] === value),
-        onclick: () => { state[key] = value; writeState(); syncFilters(); render(); },
+        onclick: () => {
+          if (state[key] === value) return;
+          state[key] = value; writeState();
+          withTransition(() => { syncFilters(); render(); });
+        },
       }, icon("check", "check"), label));
     }
   });
@@ -368,21 +420,40 @@ function loadPlayer(container, c) {
   }));
 }
 
+// Play a card: collapse and stop the previous one, load this one's embed, expand it.
+function play(node) {
+  withTransition(() => {
+    if (activeCard && activeCard !== node) activeCard.stop();
+    node.start();
+    activeCard = node;
+  }, () => {
+    const top = document.getElementById("top").offsetHeight + 12;
+    node.style.scrollMarginTop = `${top}px`;
+    node.scrollIntoView({ block: "nearest", behavior: reducedMotion.matches ? "auto" : "smooth" });
+  });
+}
+
 function card(c) {
   const color = CLASS_COLORS[c.spec];
   const player = el("div", { class: "player" });
-  player.append(el("button", {
-    class: "facade", type: "button", onclick: () => loadPlayer(player, c),
+  const facade = () => el("button", {
+    class: "facade", type: "button", onclick: () => play(node),
     "aria-label": `Play ${c.spec} clip at ${clock(c.sec)}`,
-  }, el("span", { class: "fab" }, icon("play")), el("span", { class: "when" }, `Play from ${clock(c.sec)}`)));
+  }, el("span", { class: "fab" }, icon("play")), el("span", { class: "when" }, `Play from ${clock(c.sec)}`));
+  player.append(facade());
 
   const site = c.src === "tw" ? "Twitch" : "YouTube";
-  return el("article", { class: color ? "card" : "card no-class", style: color ? `--class: ${color}` : "" },
+  const style = [`view-transition-name: clip-${c.key}`, color ? `--class: ${color}` : ""].filter(Boolean).join("; ");
+  const node = el("article", { class: color ? "card" : "card no-class", style },
     player,
     el("div", { class: "meta" },
       el("div", { class: "spec-row" },
         el("span", { class: "dot", "aria-hidden": "true" }),
-        el("span", { class: "spec" }, c.spec)),
+        el("span", { class: "spec" }, c.spec),
+        el("button", {
+          class: "restart", type: "button", onclick: () => loadPlayer(player, c),
+          title: `Restart from ${clock(c.sec)}`, "aria-label": `Restart ${c.spec} clip from ${clock(c.sec)}`,
+        }, icon("replay"))),
       el("div", { class: "row" },
         state.s === "all" ? el("span", { class: "chip" }, STRATEGIES[c.strat]) : null,
         state.p === "all" ? el("span", { class: "chip", title: "Assigned pickup side" }, `${c.pos} pickup`) : null,
@@ -390,9 +461,13 @@ function card(c) {
         el("a", { class: "open", href: watchUrl(c), target: "_blank", rel: "noopener" },
           `Open on ${site}`, icon("external"))),
       c.note ? el("div", { class: "note" }, c.note) : null));
+  node.start = () => { loadPlayer(player, c); node.classList.add("playing"); };
+  node.stop = () => { player.replaceChildren(facade()); node.classList.remove("playing"); };
+  return node;
 }
 
 function render() {
+  activeCard = null;   // re-rendering replaces every card, stopping any video
   const stratOrder = Object.keys(STRATEGIES);
   const visible = CLIPS.filter(c =>
     (state.s === "all" || c.strat === state.s) &&
@@ -411,7 +486,7 @@ function render() {
       sections.push(el("section", {},
         el("h2", {}, `Boss ${SIDES[boss].toLowerCase()}, waves ${SIDES[waves].toLowerCase()}`,
           el("span", { class: "badge" }, String(items.length))),
-        el("div", { class: "grid" }, ...items.map(card))));
+        el("div", { class: "grid", style: `--n: ${items.length}` }, ...items.map(card))));
     }
   }
 
