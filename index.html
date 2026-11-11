@@ -57,6 +57,19 @@
   .desc { display: block; color: var(--on-surface-variant); font-size: 14px; }
   .path { display: block; margin-top: 2px; color: var(--primary-ink); font-size: 13px; }
   .chev { color: var(--on-surface-variant); }
+  .avatar .icon { width: 24px; height: 24px; }
+  .avatar.alt { background: var(--secondary-container); color: var(--on-secondary-container); }
+
+  /* Split card: one entry, two links. Connected halves with a small gap and tight
+     inner corners, like an M3 split button. Stacks on narrow screens. */
+  .split { display: flex; gap: 2px; }
+  .split .page:first-child { flex: 1; min-width: 0; border-radius: var(--radius-l) 4px 4px var(--radius-l); }
+  .split .page:last-child { flex: none; border-radius: 4px var(--radius-l) var(--radius-l) 4px; }
+  @media (max-width: 480px) {
+    .split { flex-direction: column; }
+    .split .page:first-child { border-radius: var(--radius-l) var(--radius-l) 4px 4px; }
+    .split .page:last-child { border-radius: 4px 4px var(--radius-l) var(--radius-l); }
+  }
 </style>
 </head>
 <body>
@@ -74,6 +87,25 @@
           <span class="path">/ulatek</span>
         </span>
         <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 16.6 13.2 12 8.6 7.4 10 6l6 6-6 6z"/></svg>
+      </a>
+    </li>
+    <li class="split">
+      <a class="page" href="https://addons.wago.io/addons/rcpt-addon" target="_blank" rel="noopener">
+        <span class="avatar" aria-hidden="true">R</span>
+        <span class="text">
+          <span class="name">RCPT Addon</span>
+          <span class="desc">Ready Check Pull Timer for World of Warcraft.</span>
+          <span class="path">Wago</span>
+        </span>
+        <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21q-.82 0-1.41-.59Q3 19.82 3 19V5q0-.82.59-1.41Q4.18 3 5 3h7v2H5v14h14v-7h2v7q0 .82-.59 1.41Q19.82 21 19 21zm4.7-5.3-1.4-1.4L17.6 5H14V3h7v7h-2V6.4z"/></svg>
+      </a>
+      <a class="page" href="https://github.com/spencerneutron/RCPT-Addon" target="_blank" rel="noopener" aria-label="RCPT Addon source on GitHub">
+        <span class="avatar alt" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M8 18 2 12l6-6 1.4 1.45L4.85 12l4.55 4.55zm8 0-1.4-1.45L19.15 12 14.6 7.4 16 6l6 6z"/></svg></span>
+        <span class="text">
+          <span class="name">Source</span>
+          <span class="path">GitHub</span>
+        </span>
+        <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21q-.82 0-1.41-.59Q3 19.82 3 19V5q0-.82.59-1.41Q4.18 3 5 3h7v2H5v14h14v-7h2v7q0 .82-.59 1.41Q19.82 21 19 21zm4.7-5.3-1.4-1.4L17.6 5H14V3h7v7h-2V6.4z"/></svg>
       </a>
     </li>
   </ul>

@@ -7,6 +7,8 @@ Static GitHub Pages site. No build step: every file is served as-is (`.nojekyll`
 | `/` | `index.html` | Directory of the pages below |
 | `/ulatek/` | `ulatek/index.html` | Encounter VOD index, filterable by boss side, wave side, strategy and assigned pickup side |
 
+The root page also links out to the RCPT addon: a split card whose left half opens it on Wago and whose right half opens its source on GitHub.
+
 Shared theme tokens (Material 3, pastel, mage-blue primary) live in `assets/theme.css`.
 
 ## Adding a page
