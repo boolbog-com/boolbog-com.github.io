@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Raid VODs offline · boolbog</title>
+<meta name="description" content="The raid recordings are offline for maintenance.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%233fc7eb'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,25..151,100..1000&display=swap">
+<link rel="stylesheet" href="../assets/theme.css">
+<style>
+  body {
+    min-height: 100svh;
+    background:
+      radial-gradient(60rem 40rem at 85% -10%, color-mix(in srgb, var(--primary) 30%, transparent), transparent 60%),
+      radial-gradient(50rem 36rem at -10% 110%, color-mix(in srgb, var(--primary-container) 70%, transparent), transparent 60%),
+      var(--surface);
+  }
+  main {
+    max-width: 600px; min-height: 100svh; margin: 0 auto; padding: 56px 16px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .site {
+    margin: 0 0 20px; font-size: 22px; font-weight: 820; font-stretch: 151%;
+    font-variation-settings: "wdth" 151; letter-spacing: -.01em;
+    color: var(--on-surface); text-decoration: none; align-self: flex-start;
+  }
+  .site::after {
+    content: ""; display: inline-block; width: .22em; height: .22em; margin-left: .06em;
+    border-radius: 50%; background: var(--primary);
+  }
+  .card {
+    position: relative; overflow: hidden;
+    padding: 36px 28px 32px; border-radius: var(--radius-xl);
+    background: var(--surface-lowest);
+    border: 1px solid var(--outline-variant);
+    box-shadow: 0 1px 2px rgb(0 0 0 / .06), 0 12px 40px -12px color-mix(in srgb, var(--primary) 45%, transparent);
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 0 0 auto; height: 6px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-container));
+  }
+  .badge {
+    width: 64px; height: 64px; margin: 0 0 24px;
+    display: grid; place-items: center; border-radius: 20px;
+    background: var(--primary-container); color: var(--on-primary-container);
+  }
+  .badge svg { width: 32px; height: 32px; fill: currentColor; }
+  .status {
+    display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px;
+    padding: 5px 12px; border-radius: 999px;
+    background: var(--secondary-container); color: var(--on-secondary-container);
+    font-size: 13px; font-weight: 600; letter-spacing: .02em;
+  }
+  .status::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--primary);
+    box-shadow: 0 0 0 0 var(--primary); animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse { to { box-shadow: 0 0 0 8px transparent; } }
+  h1 {
+    margin: 0 0 12px; font-size: clamp(32px, 8vw, 46px); line-height: 1.05;
+    font-weight: 780; font-stretch: 125%; font-variation-settings: "wdth" 125;
+    letter-spacing: -.01em; color: var(--on-surface);
+  }
+  p { margin: 0 0 10px; color: var(--on-surface-variant); font-size: 16px; line-height: 1.55; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+  .back {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px 10px 14px;
+    border-radius: 999px; background: var(--primary); color: var(--on-primary);
+    font-weight: 650; text-decoration: none; transition: filter .15s;
+  }
+  .back:hover { filter: brightness(1.06); }
+  .back svg { width: 20px; height: 20px; fill: currentColor; }
+  .back:focus-visible, .site:focus-visible { outline: 3px solid var(--primary-ink); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="site" href="/">boolbog</a>
+  <section class="card">
+    <div class="badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M9 16h2V8H9zm4 0h2V8h-2zm-1 6q-2.07 0-3.9-.79-1.82-.78-3.17-2.14-1.36-1.35-2.14-3.17Q2 14.07 2 12t.79-3.9q.78-1.82 2.14-3.17Q6.28 3.57 8.1 2.79 9.93 2 12 2t3.9.79q1.82.78 3.17 2.14 1.36 1.35 2.14 3.17Q22 9.93 22 12t-.79 3.9q-.78 1.82-2.14 3.17-1.35 1.36-3.17 2.14Q14.07 22 12 22m0-2q3.35 0 5.68-2.32Q20 15.35 20 12t-2.32-5.68Q15.35 4 12 4T6.33 6.32Q4 8.65 4 12t2.33 5.68Q8.65 20 12 20"/></svg>
+    </div>
+    <p class="status">Offline for maintenance</p>
+    <h1>Raid VODs are taking a break</h1>
+    <p>The recordings are offline for now. Nothing is lost; they'll be back soon.</p>
+    <p>Check the guild Discord for updates.</p>
+    <div class="actions">
+      <a class="back" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 18-6-6 6-6 1.4 1.45L7.85 11H20v2H7.85l3.55 3.55z"/></svg>Back to boolbog</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>

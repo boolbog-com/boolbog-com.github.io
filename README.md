@@ -6,8 +6,9 @@ Static GitHub Pages site. No build step: every file is served as-is (`.nojekyll`
 |-------|------|------------|
 | `/` | `index.html` | Directory of the pages below |
 | `/ulatek/` | `ulatek/index.html` | Encounter VOD index, filterable by boss side, wave side, strategy and assigned pickup side |
+| `/vods-down/` | `vods-down/index.html` | Maintenance page for vods.boolbog.com (not linked; a Cloudflare redirect sends visitors here while the recordings are offline) |
 
-The root page also links out to the RCPT addon: a split card whose left half opens it on Wago and whose right half opens its source on GitHub.
+The root page also links out to vods.boolbog.com, the guild's raid recordings (served from home behind a Discord sign-in, guild members only), and to the RCPT addon: a split card whose left half opens it on Wago and whose right half opens its source on GitHub.
 
 Shared theme tokens (Material 3, pastel, mage-blue primary) live in `assets/theme.css`.
 
